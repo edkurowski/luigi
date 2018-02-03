@@ -521,6 +521,14 @@ class BigQueryLoadTask(MixinBigQueryBulkComplete, luigi.Task):
         """	Indicates if BigQuery should allow quoted data sections that contain newline characters in a CSV file. The default value is false."""
         return False
 
+    @property
+    def section_quote(self):
+        """Optional: The value that is used to quote data sections in a CSV file. BigQuery converts the string to ISO-8859-1 encoding, and then
+        uses the first byte of the encoded string to split the data in its raw, binary state. The default value is a double-quote ('"'). If your
+        data does not contain quoted sections, set the property value to an empty string. If your data contains quoted newline characters, you
+        must also set the allowQuotedNewlines property to true."""
+        return None
+
     def run(self):
         output = self.output()
         assert isinstance(output, BigQueryTarget), 'Output must be a BigQueryTarget, not %s' % (output)
@@ -553,6 +561,8 @@ class BigQueryLoadTask(MixinBigQueryBulkComplete, luigi.Task):
             job['configuration']['load']['skipLeadingRows'] = self.skip_leading_rows
             job['configuration']['load']['allowJaggedRows'] = self.allow_jagged_rows
             job['configuration']['load']['allowQuotedNewlines'] = self.allow_quoted_new_lines
+            if self.section_quote:
+                job['configuration']['load']['quote'] = self.section_quote
 
         if self.schema:
             job['configuration']['load']['schema'] = {'fields': self.schema}
