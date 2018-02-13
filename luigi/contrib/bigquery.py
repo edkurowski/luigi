@@ -521,6 +521,10 @@ class BigQueryLoadTask(MixinBigQueryBulkComplete, luigi.Task):
         """	Indicates if BigQuery should allow quoted data sections that contain newline characters in a CSV file. The default value is false."""
         return False
 
+    @property
+    def null_marker(self):
+        return None
+
     def run(self):
         output = self.output()
         assert isinstance(output, BigQueryTarget), 'Output must be a BigQueryTarget, not %s' % (output)
@@ -553,6 +557,8 @@ class BigQueryLoadTask(MixinBigQueryBulkComplete, luigi.Task):
             job['configuration']['load']['skipLeadingRows'] = self.skip_leading_rows
             job['configuration']['load']['allowJaggedRows'] = self.allow_jagged_rows
             job['configuration']['load']['allowQuotedNewlines'] = self.allow_quoted_new_lines
+            if self.null_marker:
+                job['configuration']['load']['nullMarker'] = self.null_marker
 
         if self.schema:
             job['configuration']['load']['schema'] = {'fields': self.schema}
